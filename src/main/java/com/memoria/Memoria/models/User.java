@@ -2,31 +2,28 @@ package com.memoria.Memoria.models;
 
 import jakarta.persistence.* ;
 
+import java.util.ArrayList;
 import java.util.List ;
 
 import lombok.* ;
 
 @Entity
-@Table(name="users")
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
+@Table(name = "users")
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int id;
+    private Long id;
 
-    String username;
-    String password;
-    String email;
+    @Column(nullable = false, unique = true)
+    private String username;
 
-    @OneToMany(mappedBy = "user", cascade= CascadeType.ALL)
-    List<Note> notes;
+    @Column(nullable = false, unique = true)
+    private String email;
 
-    public User(String username, String password, String email) {
-        this.username = username;
-        this.password = password;
-        this.email = email;
-    }
+    @Column(nullable = false)
+    private String password;
+
+    @OneToMany(mappedBy = "user")
+    private List<Note> notes = new ArrayList<>();
 }

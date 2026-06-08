@@ -8,32 +8,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
-public class UserService {
+public interface UserService {
 
-    @Autowired
-    UserRepository userRepository;
+    User register(User user);
 
-    public List<User> findAllUsers(){
-        return userRepository.findAll();
-    }
+    Optional<User> findById(Long id);
 
-    public User findUserById(int id){
-        return userRepository.findById(Math.toIntExact(Long.valueOf(id)));
-    }
-
-    public List<User> findUsersByUsername(String username){
-        return userRepository.findByUsernameContainingIgnoreCase(username);
-    }
-
-    public void createNewUser(String username, String password, String email){
-        User newUser = new User(username, password, email);
-        userRepository.save(newUser);
-    }
-
-    public void deleteUser(User user){
-        userRepository.delete((user));
-    }
-
-
+    Optional<User> findByEmail(String email);
 }
