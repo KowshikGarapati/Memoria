@@ -3,7 +3,11 @@ import com.memoria.Memoria.repositories.NoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.memoria.Memoria.models.Note;
+
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class NoteServiceImpl implements NoteService {
