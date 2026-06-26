@@ -1,5 +1,6 @@
 package com.memoria.Memoria.services;
 
+import com.memoria.Memoria.dto.user.RegisterRequest;
 import com.memoria.Memoria.models.User;
 import com.memoria.Memoria.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +12,11 @@ import java.util.Optional;
 
 public interface UserService {
 
-    User register(User user);
+    void register(RegisterRequest request);
 
     Optional<User> findById(Long id);
 
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByUsername(String username);
 }

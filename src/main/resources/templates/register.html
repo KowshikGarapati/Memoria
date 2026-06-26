@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <title>Register • Memoria</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+        body{
+            background:#f5f5f5;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            min-height:100vh;
+            padding:40px 20px;
+            color:black;
+            font-family:'Segoe UI', sans-serif;
+        }
+
+        .register-box{
+            background:white;
+            padding:45px;
+            width:100%;
+            max-width:480px;
+            border-radius:24px;
+            border:1px solid #d1d5db;
+            box-shadow:0 6px 25px rgba(0,0,0,0.08);
+        }
+
+        .title{
+            font-size:38px;
+            font-weight:700;
+            margin-bottom:10px;
+            color:#111827;
+        }
+
+        .subtitle{
+            color:#4b5563;
+            margin-bottom:35px;
+            font-size:16px;
+        }
+
+        .form-label{
+            color:#111827;
+            font-weight:600;
+            margin-bottom:8px;
+        }
+
+        .form-control{
+            background:white;
+            border:1.5px solid #cbd5e1;
+            color:#111827;
+            padding:14px;
+            border-radius:14px;
+            transition:0.2s ease;
+            width:100%;
+        }
+
+        .form-control:focus{
+            background:white;
+            color:#111827;
+            border-color:black;
+            box-shadow:0 0 0 4px rgba(0,0,0,0.08);
+            outline:none;
+        }
+
+        .btn-login{
+            background:black;
+            border:none;
+            width:100%;
+            padding:14px;
+            border-radius:14px;
+            color:white;
+            font-weight:600;
+            transition:0.2s ease;
+            margin-top:10px;
+        }
+
+        .btn-login:hover{
+            background:#222;
+        }
+
+        .link{
+            color:#111827;
+            font-weight:600;
+            text-decoration:none;
+        }
+
+        .link:hover{
+            text-decoration:underline;
+        }
+
+    </style>
+
+</head>
+<body>
+
+<div class="register-box">
+
+    <div class="title">
+        Create Account
+    </div>
+
+    <div class="subtitle">
+        Join the writing community.
+    </div>
+
+    <form th:action="@{/register}" method="post">
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Username
+            </label>
+
+            <input type="text"
+                   class="form-control"
+                   name="username"
+                   required>
+
+        </div>
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Email
+            </label>
+
+            <input type="email"
+                   class="form-control"
+                   name="email"
+                   required>
+
+        </div>
+
+        <div class="mb-4">
+
+            <label class="form-label">
+                Password
+            </label>
+
+            <input type="password"
+                   class="form-control"
+                   name="password"
+                   required>
+
+        </div>
+        <div class="mb-5">
+
+            <label class="form-label">
+                Confirm Password
+            </label>
+
+            <input type="password"
+                   class="form-control"
+                   name="confirmedPassword"
+                   required>
+
+        </div>
+
+        <input type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}" />
+
+        <button type="submit"
+                class="btn btn-login text-white">
+            Register
+        </button>
+
+    </form>
+
+    <div class="mt-4 text-center">
+
+        Already have an account?
+
+        <a href="/login" class="link">
+            Login
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

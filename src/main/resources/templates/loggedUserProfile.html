@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Profile • WriteSphere</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <style>
+
+        body{
+            background:#f5f1ea;
+            font-family:'Inter',sans-serif;
+            color:black;
+        }
+
+        .sidebar{
+            min-height:100vh;
+            background:white;
+            border-right:1px solid #ddd;
+            padding-top:30px;
+        }
+
+        .logo{
+            font-family:'Playfair Display',serif;
+            font-size:2rem;
+            font-weight:bold;
+            text-align:center;
+            margin-bottom:40px;
+        }
+
+        .nav-link{
+            color:black;
+            margin-bottom:10px;
+            border-radius:10px;
+            padding:12px;
+        }
+
+        .nav-link:hover{
+            background:#f1f1f1;
+        }
+
+        .nav-link.active{
+            background:black !important;
+            color:white !important;
+        }
+
+        .main-content{
+            padding:50px;
+        }
+
+        .profile-card{
+            background:white;
+            border-radius:25px;
+            padding:40px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom:40px;
+        }
+
+        .profile-image{
+            width:130px;
+            height:130px;
+            border-radius:50%;
+            object-fit:cover;
+            margin-bottom:20px;
+        }
+
+        .username{
+            font-family:'Playfair Display',serif;
+            font-size:3rem;
+            margin-bottom:10px;
+        }
+
+        .bio{
+            color:#666;
+            margin-bottom:25px;
+        }
+
+        .stats{
+            display:flex;
+            gap:40px;
+            margin-top:20px;
+        }
+
+        .stat-number{
+            font-size:1.5rem;
+            font-weight:bold;
+        }
+
+        .stat-label{
+            color:#666;
+        }
+
+        .section-title{
+            font-family:'Playfair Display',serif;
+            font-size:2.5rem;
+            margin-bottom:30px;
+        }
+
+        .info-card{
+            background:white;
+            border-radius:20px;
+            padding:30px;
+            margin-bottom:30px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .info-label{
+            color:#666;
+            margin-bottom:5px;
+            font-size:14px;
+        }
+
+        .info-value{
+            font-size:1.1rem;
+            margin-bottom:20px;
+        }
+
+        .edit-btn{
+            background:black;
+            color:white;
+            border:none;
+            padding:12px 24px;
+            border-radius:12px;
+            text-decoration:none;
+        }
+
+        .edit-btn:hover{
+            opacity:0.9;
+            color:white;
+        }
+
+        .post-card{
+            background:white;
+            border-radius:20px;
+            padding:30px;
+            margin-bottom:25px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .post-type{
+            display:inline-block;
+            background:black;
+            color:white;
+            padding:5px 12px;
+            border-radius:30px;
+            font-size:12px;
+            margin-bottom:15px;
+        }
+
+        .post-title{
+            font-size:2rem;
+            font-weight:bold;
+            margin-bottom:10px;
+        }
+
+        .post-content{
+            color:#222;
+            line-height:1.8;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- SIDEBAR -->
+
+        <div class="col-md-3 col-lg-2 sidebar">
+
+            <div class="logo">
+                Memoria
+            </div>
+
+            <ul class="nav flex-column px-3">
+
+                <li class="nav-item">
+                    <a href="/" class="nav-link">
+                        Home
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="/explore" class="nav-link">
+                        Explore
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="/search" class="nav-link">
+                        Search
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="/newPost" class="nav-link">
+                        Create
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="/profile" class="nav-link active">
+                        Profile
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <!-- MAIN CONTENT -->
+
+        <div class="col-md-9 col-lg-10 main-content">
+
+            <!-- PROFILE HEADER -->
+
+            <div class="profile-card text-center">
+
+                <img
+                        src="https://www.w3schools.com/howto/img_avatar.png"
+                        class="profile-image">
+
+                <div class="username"
+                     th:text="${loggedUser.username}">
+                </div>
+
+                <div class="bio"
+                     th:text="">
+                </div>
+
+                <div class="stats justify-content-center">
+
+                    <div>
+
+                        <div class="stat-number"
+                             th:text="">
+                        </div>
+
+                        <div class="stat-label">
+                            Followers
+                        </div>
+
+                    </div>
+
+                    <div>
+
+                        <div class="stat-number"
+                             th:text="">
+                        </div>
+
+                        <div class="stat-label">
+                            Following
+                        </div>
+
+                    </div>
+
+                    <div>
+
+                        <div class="stat-number"
+                             th:text="">
+                        </div>
+
+                        <div class="stat-label">
+                            Posts
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- USER INFO -->
+
+            <div class="section-title">
+                Profile Details
+            </div>
+
+            <div class="info-card">
+
+                <div class="row">
+
+                    <div class="col-md-6">
+
+                        <div class="info-label">
+                            Username
+                        </div>
+
+                        <div class="info-value"
+                             th:text="${loggedUser.username}">
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <div class="info-label">
+                            Email
+                        </div>
+
+                        <div class="info-value"
+                             th:text="${loggedUser.email}">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6">
+
+                        <div class="info-label">
+                            Address
+                        </div>
+
+                        <div class="info-value"
+                             th:text="">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <a href="/editprofile"
+                   class="edit-btn">
+                    Edit Profile
+                </a>
+
+            </div>
+
+            <!-- POSTS -->
+
+            <div class="section-title">
+                Posts
+            </div>
+
+            <form th:action="@{/logout}" method="post">
+
+                <button
+                        type="submit"
+                        class="btn btn-outline-dark mt-4">
+
+                    Logout
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
