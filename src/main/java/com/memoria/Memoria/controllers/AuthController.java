@@ -37,7 +37,7 @@ public class AuthController {
 
     @GetMapping("/")
     public String homePage(Principal principal, Model model){
-        Optional<User> loggeduser = userService.findByUsername(principal.getName());
+        User loggeduser = userService.findByUsername(principal.getName());
         if(loggeduser == null) return "redirect:/login";
         model.addAttribute("loggedUser", loggeduser);
         return "loggedUserProfile";
