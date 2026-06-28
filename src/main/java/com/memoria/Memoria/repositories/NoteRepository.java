@@ -12,6 +12,8 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
 
     List<Note> findByUserId(Long userId);
 
+    List<Note> findNotesByUser(User user);
+
     List<Note> findByTitleContainingIgnoreCase(String title);
 
     List<Note> findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(

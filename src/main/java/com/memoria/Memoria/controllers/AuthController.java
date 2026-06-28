@@ -1,7 +1,9 @@
 package com.memoria.Memoria.controllers;
 
 import com.memoria.Memoria.dto.user.RegisterRequest;
+import com.memoria.Memoria.models.Note;
 import com.memoria.Memoria.models.User;
+import com.memoria.Memoria.services.NoteServiceImpl;
 import com.memoria.Memoria.services.UserService;
 import com.memoria.Memoria.services.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -17,6 +20,9 @@ public class AuthController {
 
     @Autowired
     UserServiceImpl userService;
+
+    @Autowired
+    NoteServiceImpl noteService;
 
     @GetMapping("/register")
     public String showRegistrationForm(){
@@ -38,8 +44,10 @@ public class AuthController {
     @GetMapping("/")
     public String homePage(Principal principal, Model model){
         User loggeduser = userService.findByUsername(principal.getName());
+        List<Note> notes = noteService.getNotesByUser(loggeduser);
         if(loggeduser == null) return "redirect:/login";
         model.addAttribute("loggedUser", loggeduser);
-        return "loggedUserProfile";
+        model.addAttribute("notes", notes);
+        return "home";
     }
 }
