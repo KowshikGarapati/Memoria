@@ -63,30 +63,43 @@ public class NoteController {
 
     @GetMapping("/{id}/edit")
     public String editNote(@PathVariable Long id,
-                           Model model){
+                           Model model,
+                           Principal principal){
 
         Note note = noteService.findById(id);
+        if(userService.findByUsername(principal.getName()).getId() == noteService.findById(id).getUser().getId()) {
+            model.addAttribute("noteRequest", note);
 
-        model.addAttribute("noteRequest", note);
-
-        return "edit_note";
+            return "edit_note";
+        }else{
+            return "redirect:/" ;
+        }
     }
 
     @PostMapping("/{id}/edit")
     public String updateNote(@PathVariable Long id,
-                             @ModelAttribute UpdateNoteRequest request){
+                             @ModelAttribute UpdateNoteRequest request,
+                            Principal principal){
+        if(userService.findByUsername(principal.getName()).getId() == noteService.findById(id).getUser().getId()) {
+            noteService.updateNote(id, request);
 
-        noteService.updateNote(id, request);
-
-        return "redirect:/notes/" + id;
+            return "redirect:/notes/" + id;
+        }else{
+            return "redirect:/" ;
+        }
     }
 
     @PostMapping("/{id}/delete")
-    public String deleteNote(@PathVariable Long id){
+    public String deleteNote(@PathVariable Long id,
+                             Principal principal){
+        if(userService.findByUsername(principal.getName()).getId() == noteService.findById(id).getUser().getId()) {
+            noteService.deleteNote(id);
 
-        noteService.deleteNote(id);
+            return "redirect:/notes";
+        }else{
+            return "redirect:/" ;
+        }
 
-        return "redirect:/notes";
     }
 
 }
