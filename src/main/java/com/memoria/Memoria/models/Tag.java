@@ -1,11 +1,13 @@
 package com.memoria.Memoria.models;
-import jakarta.persistence.* ;
 
-import lombok.* ;
+import jakarta.persistence.*;
+import lombok.*;
+
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+@Table(name = "tags")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,7 +18,7 @@ public class Tag {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String name;
 
     @ManyToMany(mappedBy = "tags")

@@ -1,12 +1,10 @@
 package com.memoria.Memoria.models;
 
-import jakarta.persistence.* ;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.ArrayList;
-import java.util.List ;
-
-import lombok.* ;
+import java.util.List;
 
 @Entity
 @Table(name = "users")

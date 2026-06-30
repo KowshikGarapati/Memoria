@@ -1,8 +1,6 @@
 package com.memoria.Memoria.config;
 
-import com.memoria.Memoria.config.CustomUserDetailsService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Bean;
+import lombok.RequiredArgsConstructor;import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -50,7 +48,7 @@ public class SecurityConfiguration {
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/", true)
+                        .defaultSuccessUrl("/notes", true)
                         .failureUrl("/login?error")
                         .permitAll()
                 )

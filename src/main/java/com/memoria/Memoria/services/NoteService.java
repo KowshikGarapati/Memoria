@@ -11,18 +11,19 @@ public interface NoteService {
 
     Note createNote(CreateNoteRequest request, User user);
 
-    void updateNote(Long id, UpdateNoteRequest request);
-
-    List<Note> getUserNotes(Long userId);
-
-    List<Note> getNotesByUser(User user);
+    Note updateNote(Long id, UpdateNoteRequest request, User user);
 
     Note findById(Long id);
 
+    Note findOwnedNote(Long id, User user);
+
     List<Note> findAllByUser(User user);
 
-    void deleteNote(Long noteId);
+    void deleteNote(Long id, User user);
 
-    List<Note> search(String query);
+    List<Note> search(User user, String query);
 
+    long countByUser(User user);
+
+    UpdateNoteRequest toUpdateRequest(Note note);
 }
