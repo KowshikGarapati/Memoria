@@ -1,16 +1,22 @@
 package com.memoria.Memoria.dto.note;
 
-import java.time.LocalDateTime;
-
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Data
-public class NoteResponse {
+@AllArgsConstructor
+@NoArgsConstructor
+public class SearchResultDTO {
     private Long id;
     private String title;
     private String content;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Set<String> tags;
+    private double score;
+    private String highlight;
 }
