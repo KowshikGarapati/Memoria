@@ -1,6 +1,7 @@
 package com.memoria.Memoria.services;
 
 import com.memoria.Memoria.dto.note.CreateNoteRequest;
+import com.memoria.Memoria.dto.note.SearchResultDTO;
 import com.memoria.Memoria.dto.note.UpdateNoteRequest;
 import com.memoria.Memoria.models.Note;
 import com.memoria.Memoria.models.User;
@@ -22,6 +23,8 @@ public interface NoteService {
     void deleteNote(Long id, User user);
 
     List<Note> search(User user, String query);
+
+    List<SearchResultDTO> searchHybrid(User user, String query);
 
     long countByUser(User user);
 

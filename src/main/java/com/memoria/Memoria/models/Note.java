@@ -42,6 +42,11 @@ public class Note {
     )
     private Set<Tag> tags = new HashSet<>();
 
+    @Transient
+    private double[] embedding;
+    //@Column(columnDefinition = "vector(768)")
+    //private double[] embedding;
+
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();

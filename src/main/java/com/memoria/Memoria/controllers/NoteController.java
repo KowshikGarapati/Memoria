@@ -37,7 +37,13 @@ public class NoteController {
                               Principal principal) {
         User user = userService.requireByUsername(principal.getName());
         model.addAttribute("loggedUser", user);
-        model.addAttribute("notes", noteService.search(user, query));
+        
+        if (query != null && !query.isBlank()) {
+            model.addAttribute("searchResults", noteService.searchHybrid(user, query));
+        } else {
+            model.addAttribute("notes", noteService.findAllByUser(user));
+        }
+        
         model.addAttribute("searchQuery", query);
         return "home";
     }
