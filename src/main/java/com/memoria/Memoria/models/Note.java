@@ -42,6 +42,16 @@ public class Note {
     )
     private Set<Tag> tags = new HashSet<>();
 
+    @Column(columnDefinition = "TEXT")
+    private String summary;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "summary_status", nullable = false)
+    private SummaryStatus summaryStatus = SummaryStatus.PENDING;
+
+    @Column(name = "summary_generated_at")
+    private LocalDateTime summaryGeneratedAt;
+
     @Transient
     private double[] embedding;
     //@Column(columnDefinition = "vector(768)")
