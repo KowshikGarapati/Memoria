@@ -63,5 +63,5 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
             """, nativeQuery = true)
     List<Object[]> findHybridSearchResults(@Param("userId") Long userId, 
                                           @Param("query") String query, 
-                                          @Param("queryVector") double[] queryVector);
+                                          @Param("queryVector") float[] queryVector);
 }

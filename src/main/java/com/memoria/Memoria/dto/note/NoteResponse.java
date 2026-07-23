@@ -13,4 +13,7 @@ public class NoteResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Set<String> tags;
+    private String summary;
+    private String summaryStatus;
+    private LocalDateTime summaryGeneratedAt;
 }

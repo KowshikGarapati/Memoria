@@ -8,7 +8,10 @@ import com.memoria.Memoria.exception.UnauthorizedAccessException;
 import com.memoria.Memoria.models.Note;
 import com.memoria.Memoria.models.User;
 import com.memoria.Memoria.repositories.NoteRepository;
+import com.memoria.Memoria.events.NoteSavedEvent;
+import com.memoria.Memoria.models.SummaryStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +25,8 @@ public class NoteServiceImpl implements NoteService {
     private final NoteRepository noteRepository;
     private final TagService tagService;
     private final EmbeddingService embeddingService;
-    private final AiService aiService; // Anthropic for summaries
+    private final AiService aiService; // Local Ollama AI service for summaries & chat
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -35,10 +39,17 @@ public class NoteServiceImpl implements NoteService {
         
         // Generate embedding synchronously for simplicity in Phase 2
         String textToEmbed = note.getTitle() + " " + note.getContent();
-        double[] embedding = embeddingService.getEmbedding(textToEmbed).block();
-        note.setEmbedding(embedding);
+        try {
+            float[] embedding = embeddingService.getEmbedding(textToEmbed).block();
+            note.setEmbedding(embedding);
+        } catch (Exception e) {
+            note.setEmbedding(null);
+        }
         
-        return noteRepository.save(note);
+        note.setSummaryStatus(SummaryStatus.PENDING);
+        Note savedNote = noteRepository.save(note);
+        eventPublisher.publishEvent(new NoteSavedEvent(savedNote.getId()));
+        return savedNote;
     }
 
     @Override
@@ -50,10 +61,19 @@ public class NoteServiceImpl implements NoteService {
         note.setTags(tagService.resolveTagsFromInput(request.getTags()));
         
         String textToEmbed = note.getTitle() + " " + note.getContent();
-        double[] embedding = embeddingService.getEmbedding(textToEmbed).block();
-        note.setEmbedding(embedding);
+        try {
+            float[] embedding = embeddingService.getEmbedding(textToEmbed).block();
+            note.setEmbedding(embedding);
+        } catch (Exception e) {
+            note.setEmbedding(null);
+        }
         
-        return noteRepository.save(note);
+        // Preserve previous summary but mark status as PENDING for regeneration
+        note.setSummaryStatus(SummaryStatus.PENDING);
+        
+        Note savedNote = noteRepository.save(note);
+        eventPublisher.publishEvent(new NoteSavedEvent(savedNote.getId()));
+        return savedNote;
     }
 
     @Override
@@ -102,25 +122,26 @@ public class NoteServiceImpl implements NoteService {
             return List.of();
         }
 
-        double[] queryVector = embeddingService.getEmbedding(query).block();
+        float[] queryVector = embeddingService.getEmbedding(query).block();
         List<Object[]> results = noteRepository.findHybridSearchResults(user.getId(), query, queryVector);
 
-        System.out.println("Hybrid results:");
-        System.out.println(results.size());
-
         return results.stream().map(row -> {
-            for (int i = 0; i < row.length; i++) {
-                System.out.println(
-                    i + " -> " +
-                    (row[i] == null ? "null" : row[i].getClass().getName())
-                );
-            }
             SearchResultDTO dto = new SearchResultDTO();
             dto.setId(((Number) row[0]).longValue());
             dto.setTitle((String) row[1]);
             dto.setContent((String) row[2]);
-            dto.setCreatedAt((LocalDateTime) row[3]);
-            dto.setUpdatedAt((LocalDateTime) row[4]);
+
+            if (row[3] instanceof java.sql.Timestamp ts) {
+                dto.setCreatedAt(ts.toLocalDateTime());
+            } else if (row[3] instanceof LocalDateTime ldt) {
+                dto.setCreatedAt(ldt);
+            }
+
+            if (row[4] instanceof java.sql.Timestamp ts) {
+                dto.setUpdatedAt(ts.toLocalDateTime());
+            } else if (row[4] instanceof LocalDateTime ldt) {
+                dto.setUpdatedAt(ldt);
+            }
             
             // Fetch tags for this note
             Note note = noteRepository.findByIdWithTags(dto.getId()).orElse(null);

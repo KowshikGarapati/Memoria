@@ -19,6 +19,44 @@
                 <div>Created: <span th:text="${#temporals.format(note.createdAt, 'MMM d, yyyy HH:mm')}"></span></div>
                 <div>Updated: <span th:text="${#temporals.format(note.updatedAt, 'MMM d, yyyy HH:mm')}"></span></div>
             </div>
+
+            <!-- AI Summary Section -->
+            <div class="card bg-light border-info mb-4" th:if="${note.summaryStatus != null}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="card-title text-info mb-0 fw-semibold">🤖 AI Summary</h5>
+                        
+                        <!-- Status Badges -->
+                        <span th:if="${note.summaryStatus.name() == 'PENDING'}" class="badge bg-warning text-dark align-middle">
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" style="width: 0.75rem; height: 0.75rem;"></span>
+                            Generating...
+                        </span>
+                        <span th:if="${note.summaryStatus.name() == 'SUCCESS'}" class="badge bg-success align-middle">
+                            Synced
+                        </span>
+                        <span th:if="${note.summaryStatus.name() == 'FAILED'}" class="badge bg-danger align-middle">
+                            Generation Failed
+                        </span>
+                    </div>
+                    
+                    <!-- Summary Text -->
+                    <p th:if="${note.summary != null}" class="card-text text-secondary fst-italic" th:text="${note.summary}"></p>
+                    
+                    <!-- Status Fallbacks -->
+                    <p th:if="${note.summary == null and note.summaryStatus.name() == 'PENDING'}" class="card-text text-muted fst-italic">
+                        AI is writing a summary...
+                    </p>
+                    <p th:if="${note.summary == null and note.summaryStatus.name() == 'FAILED'}" class="card-text text-muted fst-italic">
+                        Unable to generate summary at this time.
+                    </p>
+                    
+                    <!-- Timestamp -->
+                    <small class="text-muted d-block mt-2" th:if="${note.summaryGeneratedAt != null}">
+                        Generated at: <span th:text="${#temporals.format(note.summaryGeneratedAt, 'MMM d, yyyy HH:mm')}"></span>
+                    </small>
+                </div>
+            </div>
+
             <div class="border rounded p-3 bg-white" style="white-space: pre-wrap;" th:text="${note.content}"></div>
             <div class="mt-4">
                 <a th:href="@{/notes/{id}/edit(id=${note.id})}" class="btn btn-warning">Edit</a>

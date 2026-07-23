@@ -25,7 +25,7 @@ public class OllamaEmbeddingService implements EmbeddingService {
     private final WebClient.Builder webClientBuilder;
 
     @Override
-    public Mono<double[]> getEmbedding(String text) {
+    public Mono<float[]> getEmbedding(String text) {
         if (text == null || text.isBlank()) {
             return Mono.empty();
         }
@@ -43,9 +43,17 @@ public class OllamaEmbeddingService implements EmbeddingService {
                 .map(response -> {
                     List<List<Double>> embeddings = (List<List<Double>>) response.get("embeddings");
                     List<Double> vector = embeddings.get(0);
-                    return vector.stream().mapToDouble(Double::doubleValue).toArray();
+                    float[] floatVector = new float[vector.size()];
+                    for (int i = 0; i < vector.size(); i++) {
+                        floatVector[i] = vector.get(i).floatValue();
+                    }
+                    return floatVector;
                 })
-                .doOnSuccess(e -> log.info("Ollama embedding generated successfully."))
-                .doOnError(e -> log.error("Ollama embedding failed", e));
+                .doOnSuccess(e -> log.info("Ollama embedding generated successfully"))
+                .doOnError(e -> log.error("Ollama embedding failed", e))
+                .onErrorResume(e -> {
+                    log.warn("Ollama embedding service unavailable: {}", e.getMessage());
+                    return Mono.empty();
+                });
     }
 }

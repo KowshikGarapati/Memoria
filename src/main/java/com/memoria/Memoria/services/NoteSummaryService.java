@@ -36,13 +36,15 @@ public class NoteSummaryService {
             return;
         }
 
-        // Step 2: Invoke slow Claude API outside transaction
+        // Step 2: Invoke Ollama AI service outside active database transactions
         try {
-            log.info("Generating summary via Anthropic Claude for note ID: {}", noteId);
+            log.info("Initiating summary generation via Ollama for note ID: {}", noteId);
             String summary = aiService.summarize(content).block();
+            log.info("Summary successfully generated for note ID: {}. Persisting to database...", noteId);
             updateSummaryStatus(noteId, summary, SummaryStatus.SUCCESS);
+            log.info("Summary persisted successfully for note ID: {}", noteId);
         } catch (Exception e) {
-            log.error("Error occurred while calling AI summary API for note ID: " + noteId, e);
+            log.error("Failed to generate or persist summary for note ID: " + noteId, e);
             updateSummaryStatus(noteId, null, SummaryStatus.FAILED);
         }
     }

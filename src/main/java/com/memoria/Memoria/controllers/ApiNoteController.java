@@ -88,6 +88,9 @@ public class ApiNoteController {
         response.setCreatedAt(note.getCreatedAt());
         response.setUpdatedAt(note.getUpdatedAt());
         response.setTags(note.getTags().stream().map(t -> t.getName()).collect(Collectors.toSet()));
+        response.setSummary(note.getSummary());
+        response.setSummaryStatus(note.getSummaryStatus() != null ? note.getSummaryStatus().name() : null);
+        response.setSummaryGeneratedAt(note.getSummaryGeneratedAt());
         return response;
     }
 }

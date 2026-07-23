@@ -3,6 +3,10 @@ package com.memoria.Memoria.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.hibernate.annotations.Array;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -52,11 +56,11 @@ public class Note {
     @Column(name = "summary_generated_at")
     private LocalDateTime summaryGeneratedAt;
 
-    @Transient
-    private double[] embedding;
-    //@Column(columnDefinition = "vector(768)")
-    //private double[] embedding;
-
+    @JdbcTypeCode(SqlTypes.VECTOR)
+    @Array(length = 768)
+    @Column(name = "embedding", columnDefinition = "vector(768)")
+    private float[] embedding;
+    
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
