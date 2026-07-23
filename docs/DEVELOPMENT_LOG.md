@@ -455,3 +455,58 @@ They were caused by incorrect assumptions.
 Every major breakthrough—from vector persistence to AI migration—came from questioning those assumptions, investigating the system layer by layer, and allowing evidence rather than intuition to guide the solution.
 
 This document exists not only to record what was built, but also to preserve the reasoning that shaped the project.
+
+---
+# 23/07/20226 thursday
+
+We have encoutnered a weird situation in our final testing before we pulish the mvp into ou git repo, which is, our Ollama server has went rogue and we couldn't find why ot happened. it prompts that it is up and running but the database shows otherwise. the database isn't recording any data regarding embeddings or any summary of any kind. when i looked at the logs to looks for the cause, i've found that the Ollama server is the problem, nothing else. so, I've assigned Antigravity CLI a task to check for the root cause and it came up with this :
+
+-------------------------------------------------------------------------------------------------------
+### 🔍 Root Cause of the Initial Connection Refusal                                                                                                                                                                     
+                                                                                                                                                                                                                         
+  On Windows, localhost can attempt to resolve to IPv6 (::1:11434) first before falling back to IPv4. Because the local Ollama daemon binds specifically to IPv4 127.0.0.1:11434, Spring's WebClient was receiving       
+  Connection Refused on ::1.                                                                                                                                                                                             
+                                                                                                                                                                                                                         
+  ### The Fix Applied:                                                                                                                                                                                                   
+                                                                                                                                                                                                                         
+  In application.properties, we updated the Ollama URL to target IPv4 explicitly:                                                                                                                                        
+                                                                                                                                                                                                                         
+    application.ai.ollama.url=http://127.0.0.1:11434                                                                                                                                                                     
+    ──────                                                                                                                                                                                                               
+  ## 📊 Live Verification Log Evidence                                                                                                                                                                                   
+                                                                                                                                                                                                                         
+  During test execution, local Ollama models (nomic-embed-text and llama3.2) were invoked live, and real AI summaries were generated and persisted to your PostgreSQL database.                                          
+                                                                                                                                                                                                                         
+  ### 1. Live Vector Embedding Generation & Binding:                                                                                                                                                                     
+                                                                                                                                                                                                                         
+    TRACE org.hibernate.orm.jdbc.bind : binding parameter (3:VECTOR) <- [[0.123, 0.0, ..., 0.987]]                                                                                                                       
+    Hibernate:                                                                                                                                                                                                           
+        insert into note (content, created_at, embedding, ...) values (?, ?, cast(? as vector), ...)                                                                                                                     
+                                                                                                                                                                                                                         
+  ### 2. Live Ollama Text Summarization Response (Model: llama3.2):                                                                                                                                                      
+                                                                                                                                                                                                                         
+    TRACE org.hibernate.orm.jdbc.bind : binding parameter (4:VARCHAR) <- [The content was significantly updated for testing purposes to observe and evaluate its update behavior. This update aimed to refine the        
+  system's performance and functionality. The changes made were intended to ensure seamless updates and improve overall user experience.]                                                                                
+    TRACE org.hibernate.orm.jdbc.bind : binding parameter (6:VARCHAR) <- [SUCCESS]                                                                                                                                       
+    INFO  c.m.Memoria.services.NoteSummaryService : Updated database status to SUCCESS for note ID: 49                                                                                                                   
+    INFO  c.m.Memoria.services.NoteSummaryService : Summary persisted successfully for note ID: 49                                                                                                                       
+    ──────                                                                                                                                                                                                               
+  ## 🏆 Final QA Test Suite Results                                                                                                                                                                                      
+                                                                                                                                                                                                                         
+    [INFO] Results:                                                                                                                                                                                                      
+    [INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0                                                                                                                                                              
+    [INFO] ------------------------------------------------------------------------                                                                                                                                      
+    [INFO] BUILD SUCCESS                                                                                                                                                                                                 
+    [INFO] ------------------------------------------------------------------------                                                                                                                                      
+                                                                                                                                                                                                                         
+  • ✅ Vector Storage & Retrieval: 768-dimensional float arrays created, stored in PostgreSQL, and retrieved cleanly.                                                                                                    
+  • ✅ Local Ollama Summarization: Real summaries generated asynchronously via llama3.2 and saved with status SUCCESS.                                                                                                   
+  • ✅ Resilience: Fallbacks prevent server crashes if Ollama is paused or busy.                                                                                                                                         
+                                                                                                                                                                                                                         
+  Your Memoria AI Personal Memory System backend is fully operational and functioning exactly as intended!
+
+  -----------------------------------------------------------------------------------------------------
+
+Apparently there has been a slight technical incompatibility that ran the Ollama server in IPv6 instead of IPv4 sa we need it. It is caused because the act of shutting down the computer made the system reset for all the local machines and therefore, occured this error. 
+
+## well, I will have a keen note of it and will not get stuck in a situstion of this kind

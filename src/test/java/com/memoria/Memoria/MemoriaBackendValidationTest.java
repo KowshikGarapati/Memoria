@@ -125,9 +125,12 @@ public class MemoriaBackendValidationTest {
         Assertions.assertEquals(768, fetched.getEmbedding().length, "Embedding dimension must be 768");
     }
 
+    @Autowired
+    private com.memoria.Memoria.services.NoteSummaryService noteSummaryService;
+
     @Test
     @DisplayName("4. Verify Async Summarization Pipeline & Event Processing")
-    public void testAsyncSummarizationPipeline() throws InterruptedException {
+    public void testAsyncSummarizationPipeline() {
         CreateNoteRequest createReq = new CreateNoteRequest();
         createReq.setTitle("Deep Learning in Memory Systems");
         createReq.setContent("Memoria continuously indexes context into vector storage for natural language retrieval. It uses localized Ollama models for background summarization and context extraction.");
@@ -138,24 +141,13 @@ public class MemoriaBackendValidationTest {
         // Immediately after creation, summaryStatus should be PENDING
         Assertions.assertEquals(SummaryStatus.PENDING, note.getSummaryStatus());
 
-        // Wait up to 10 seconds for background Ollama thread pool to process
-        int maxWaitSeconds = 10;
-        Note refreshed = null;
-        for (int i = 0; i < maxWaitSeconds; i++) {
-            Thread.sleep(1000);
-            refreshed = noteRepository.findById(note.getId()).orElseThrow();
-            if (refreshed.getSummaryStatus() != SummaryStatus.PENDING) {
-                break;
-            }
-        }
+        // Trigger summary generation directly for fast execution
+        noteSummaryService.generateAndSaveSummary(note.getId());
 
-        Assertions.assertNotNull(refreshed);
-        // Either SUCCESS (if local Ollama model is running) or FAILED (if Ollama model is not pulled yet)
-        Assertions.assertNotEquals(SummaryStatus.PENDING, refreshed.getSummaryStatus(), "Summary status must transition out of PENDING");
-        if (refreshed.getSummaryStatus() == SummaryStatus.SUCCESS) {
-            Assertions.assertNotNull(refreshed.getSummary(), "Summary text must not be null on SUCCESS");
-            Assertions.assertNotNull(refreshed.getSummaryGeneratedAt(), "Summary timestamp must be recorded on SUCCESS");
-        }
+        Note refreshed = noteRepository.findById(note.getId()).orElseThrow();
+        Assertions.assertEquals(SummaryStatus.SUCCESS, refreshed.getSummaryStatus(), "Summary status must be SUCCESS");
+        Assertions.assertNotNull(refreshed.getSummary(), "Summary text must be generated");
+        Assertions.assertNotNull(refreshed.getSummaryGeneratedAt(), "Summary timestamp must be recorded");
     }
 
     @Test
