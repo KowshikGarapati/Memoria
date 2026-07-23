@@ -1,673 +1,262 @@
-# MEMORIA
+# Memoria
 
-## Vision
+> **Your second brain, powered by AI.**
 
-**Memoria is an AI-powered personal memory operating system that continuously captures, understands, organizes, and retrieves everything a user intentionally chooses to remember.**
+Memoria is an AI-powered personal knowledge management system built with **Spring Boot**, **PostgreSQL**, **pgvector**, and **Ollama**. It enables users to securely store notes, organize them with tags, search using both traditional keyword matching and semantic similarity, and automatically generate concise summaries using local AI models.
 
-Unlike note-taking applications, Memoria is not designed merely to store information. It is designed to become a trusted, intelligent extension of human memory.
-
-Its purpose is simple:
-
-> **Remember everything important, so humans don't have to.**
->
+Unlike conventional note-taking applications, Memoria combines full-text search with vector embeddings to retrieve information based on meaning rather than exact wording. By running entirely on local AI models through Ollama, it also preserves user privacy while eliminating dependence on cloud-based AI services.
 
 ---
 
-# Mission
+# Vision
 
-Build the world's most intelligent, privacy-first personal memory system.
+Human memory is imperfect.
 
-Memoria should eventually become capable of remembering nearly every meaningful interaction in a user's digital life—with explicit consent—while allowing users to instantly retrieve knowledge, experiences, files, conversations, and ideas through natural language.
+Important ideas become buried beneath hundreds of notes, documents, and fleeting thoughts. Traditional search relies on exact words, making it difficult to rediscover information when we remember only the concept.
 
----
+Memoria aims to become an intelligent second brain capable of understanding what users mean, not just what they type.
 
-# Core Philosophy
-
-Traditional note apps ask users:
-
-"What do you want to save?"
-
-Memoria asks:
-
-"What is worth remembering?"
-
-The system should intelligently determine importance, summarize information, connect ideas, and make memories searchable.
-
-Users should spend less time organizing information and more time thinking.
+The long-term goal is to build a personal knowledge system that remembers, organizes, summarizes, and retrieves information as naturally as human memory itself.
 
 ---
 
-# Types of Memory
+# Current Features
 
-## 1. Explicit Memory
+## Authentication
 
-Information intentionally saved by the user.
+* Secure user registration
+* BCrypt password hashing
+* Spring Security integration
+* Session-based authentication
 
-Examples:
+## Notes
 
-- Notes
-- Journals
-- Documents
-- PDFs
-- Images
-- Voice notes
-- Quotes
-- Book highlights
-- Meeting notes
-- Ideas
+* Create notes
+* Read notes
+* Update notes
+* Delete notes
 
----
+## Tags
 
-## 2. Passive Memory
+* Attach multiple tags to notes
+* Automatic tag reuse
+* Organized note categorization
 
-Things the user chooses to let Memoria observe.
+## AI Embeddings
 
-Examples:
+Every note automatically receives a semantic embedding generated using Ollama.
 
-- Articles read
-- Documentation visited
-- GitHub repositories
-- Programming tutorials
-- Research papers
-- Reddit discussions
-- YouTube videos
-- Educational websites
-- Shopping research
-- Browser history (optional)
+This allows Memoria to understand the meaning of notes rather than relying solely on keywords.
 
-Instead of storing screenshots, Memoria stores structured understanding.
+## Semantic Search
 
-Example:
+Searches notes using vector similarity powered by PostgreSQL's pgvector extension.
 
-Visited:
+## Hybrid Search
 
-spring.io/security
+Combines:
 
-Summary:
+* PostgreSQL Full-Text Search
+* Vector Similarity Search
 
-Spring Security authenticates users using AuthenticationProvider, UserDetailsService and PasswordEncoder.
+to produce more relevant search results.
 
-Keywords:
+## AI Summaries
 
-Spring Boot
+Every note is summarized automatically in the background using a locally running Ollama model.
 
-Authentication
+Summaries are generated asynchronously without blocking user requests.
 
-Security
+## Event-Driven Processing
 
-JWT
-
-Estimated Reading Time:
-
-18 minutes
-
----
-
-## 3. Learned Memory
-
-Rather than remembering every webpage, Memoria extracts what the user actually learned.
-
-Example:
-
-Knowledge Learned
-
-- Dependency Injection
-- Spring Security
-- BCrypt
-- REST Controllers
-- DTO Pattern
-- JWT Authentication
-
-This transforms browsing history into usable knowledge.
-
----
-
-# Continuous Memory
-
-This is the heart of Memoria.
-
-Instead of requiring users to manually save everything, Memoria can continuously observe digital activity—but only with explicit permission.
-
-Continuous Memory Pipeline:
-
-Activity
-
-↓
-
-Local AI
-
-↓
-
-Importance Detection
-
-↓
-
-Summarization
-
-↓
-
-Duplicate Detection
-
-↓
-
-Encryption
-
-↓
-
-Cloud Storage
-
-↓
-
-Semantic Indexing
-
-↓
-
-Searchable Memory
-
-The system stores knowledge rather than recordings.
-
-No screenshots.
-
-No screen recordings.
-
-No keystroke logging.
-
-Only meaningful summaries.
-
----
-
-# Browser Extension
-
-The browser extension will be the first automatic capture platform.
-
-Responsibilities:
-
-- Read page title
-- Read page text
-- Detect article structure
-- Detect programming documentation
-- Detect educational content
-- Detect GitHub repositories
-- Detect YouTube transcripts
-- Detect selected text
-- Detect bookmarks
-- Detect browsing context
-
-Local AI summarizes the page.
-
-Only the summary is uploaded.
-
-This minimizes cloud cost and greatly improves user privacy.
-
----
-
-# AI
-
-## Local AI
-
-Privacy is a core principle.
-
-Whenever possible:
-
-Raw data never leaves the user's device.
-
-Instead:
-
-Webpage
-
-↓
-
-Tiny Local Language Model
-
-↓
-
-Summary
-
-↓
-
-Metadata
-
-↓
-
-Encrypted Upload
-
-This dramatically reduces storage costs and API usage.
-
----
-
-## Cloud AI
-
-Cloud AI is reserved for tasks requiring stronger reasoning.
-
-Examples:
-
-- General world knowledge
-- Coding assistance
-- Deep research
-- Long-form writing
-- Creative generation
-- Questions unrelated to stored memory
-
-If the answer exists inside Memoria's memory, cloud AI should not be used.
-
----
-
-## Hybrid AI Assistant
-
-Memoria should intelligently route questions.
-
-Question
-
-↓
-
-Planner
-
-↓
-
-Does memory contain the answer?
-
-↓
-
-YES
-
-↓
-
-Retrieve Memory
-
-↓
-
-Local Reasoning
-
-↓
-
-Answer
-
-NO
-
-↓
-
-Call External LLM
-
-↓
-
-Return Answer
-
-↓
-
-Offer to Save
-
-Eventually users will feel like they have one assistant with two brains:
-
-Personal Memory
-
--
-
-General Intelligence
-
----
-
-# Semantic Search
-
-Keyword search is insufficient.
-
-Instead, Memoria will use semantic search.
-
-Pipeline:
-
-User Query
-
-↓
-
-Embedding Model
-
-↓
-
-Vector Database
-
-↓
-
-Relevant Memories
-
-↓
-
-Language Model
-
-↓
-
-Answer
-
-Example:
-
-Query:
-
-"That authentication article I read last month."
-
-Returns:
-
-Spring Security documentation
-
-JWT guide
-
-BCrypt explanation
-
-Personal implementation notes
-
-Even if none contain the exact words typed.
-
----
-
-# Memory Graph
-
-Knowledge should not exist independently.
-
-Memoria builds relationships.
-
-Example:
-
-Spring Boot
-
-↓
-
-Spring Security
-
-↓
-
-JWT
-
-↓
-
-Authentication
-
-↓
-
-Memoria Project
-
-↓
-
-June 2026
-
-This forms a knowledge graph similar to how humans associate memories.
-
----
-
-# Timeline Memory
-
-Every memory exists within time.
-
-Example:
-
-April 2026
-
-- Finished Spring Boot
-- Read The Iliad
-- Built Memoria CRUD
-- Learned BCrypt
-- Started AI Architecture
-
-Users should be able to ask:
-
-"What did I accomplish last month?"
-
-without searching manually.
-
----
-
-# AI Tutor
-
-Memoria becomes a personalized teacher.
-
-Instead of generic tutorials, it teaches from the user's own experience.
-
-Example:
-
-"Teach me JWT again."
-
-The assistant retrieves:
-
-- User's code
-- Previous mistakes
-- Saved notes
-- Related articles
-- Personal explanations
-
-Learning becomes personalized.
-
----
-
-# Optional Email Memory
-
-Premium feature.
-
-Only with explicit consent.
-
-The assistant summarizes important emails.
-
-Examples:
-
-Interview invitations
-
-Invoices
-
-Travel confirmations
-
-Receipts
-
-Appointments
-
-Promotional emails are ignored.
-
-Spam is ignored.
-
-Only meaningful information becomes memory.
-
----
-
-# File Memory
-
-Eventually Memoria indexes local files.
-
-Users can ask:
-
-"Where is the PDF about Transformers?"
-
-or
-
-"Find the resume I edited before my Google application."
-
-Memoria retrieves files by meaning rather than filename.
-
----
-
-# Desktop Application
-
-Long-term vision.
-
-Instead of only browser memory, Memoria becomes an operating-system-level memory assistant.
-
-Possible capabilities:
-
-- File indexing
-- Folder understanding
-- PDF understanding
-- Terminal history
-- IDE integration
-- Git history
-- Calendar integration
-- Meeting summaries
-- Clipboard history
-- Local document search
-
-Eventually:
-
-"Find the Python project where I implemented JWT."
-
-or
-
-"What presentation did I edit before my AWS interview?"
-
----
-
-# Security
-
-Privacy is non-negotiable.
-
-Principles:
-
-- Explicit user consent
-- Local AI whenever possible
-- End-to-end encryption where feasible
-- User ownership of memories
-- Ability to delete everything permanently
-- Transparent permissions
-- No silent recording
-- No hidden tracking
-
-Trust is more valuable than features.
+Summary generation is triggered through Spring's event system after successful database commits, ensuring responsiveness and transactional safety.
 
 ---
 
 # Technology Stack
 
-Frontend
+### Backend
 
-- React
-- Tailwind CSS
+* Java 21
+* Spring Boot 4
+* Spring Security
+* Spring Data JPA
+* Hibernate ORM 7
+* Maven
 
-Backend
+### Database
 
-- Spring Boot
-- Spring Security
-- JWT Authentication
-- REST APIs
+* PostgreSQL
+* pgvector
+* Full-Text Search (GIN Indexes)
 
-Database
+### Artificial Intelligence
 
-- PostgreSQL
+* Ollama
+* nomic-embed-text
+* llama3.2
 
-Semantic Search
+### Development Tools
 
-- pgvector (initially)
-- Later dedicated vector database if necessary
-
-Object Storage
-
-- AWS S3 or equivalent
-
-Local AI
-
-- Small LLM running inside browser extension
-
-Cloud AI
-
-- OpenAI
-- Anthropic
-- Google Gemini
-- Open-source models
-
-Browser Extension
-
-- TypeScript
-- Chrome Extension API
-- Firefox compatibility
-- Edge compatibility
-
-Future Desktop
-
-- Tauri or Electron
-- Rust backend where appropriate
-
-Deployment
-
-- Docker
-- Kubernetes (future)
-- Cloud provider (AWS/GCP/Azure)
+* IntelliJ IDEA
+* VS Code
+* Git
+* Maven
 
 ---
 
-# Development Phases
+# Architecture Overview
 
-## Phase 1
+```text
+Client
 
-- Authentication
-- CRUD Notes
-- User Profiles
-- Search
-- Tags
+↓
 
-## Phase 2
+Spring MVC
 
-- Embeddings
-- Semantic Search
-- Vector Storage
-- AI Chat over Notes
+↓
 
-## Phase 3
+Controllers
 
-- Browser Extension
-- Automatic Memory Capture
-- Local Summarization
-- Timeline
+↓
 
-## Phase 4
+Services
 
-- Knowledge Graph
-- AI Tutor
-- Hybrid Retrieval
-- Smart Recommendations
+↓
 
-## Phase 5
+Repositories
 
-- Mobile Apps
-- Desktop Application
-- Cross-device Synchronization
-- File Memory
-- Calendar Integration
-- Email Memory (Optional)
-- Continuous Personal Memory System
+↓
 
----
+PostgreSQL
+     │
+     ├── Full-text Search
+     └── pgvector
 
-# Business Model
+↓
 
-Free
+Spring Events
 
-- Manual Notes
-- Basic AI Search
-- Limited Semantic Search
-- Browser Extension
-- Local AI
+↓
 
-Pro
+Async Thread Pool
 
-- Continuous Memory
-- Unlimited AI
-- Cross-device Sync
-- Timeline
-- Knowledge Graph
-- AI Tutor
-- Larger Cloud Storage
-- Advanced Search
+↓
 
-Enterprise
+Ollama
 
-- Team Knowledge Systems
-- Shared Organizational Memory
-- AI Knowledge Bases
-- Team Search
-- Organizational Learning
+↓
+
+Summary Update
+```
 
 ---
 
-# Final Goal
+# Highlights
 
-Memoria is not trying to replace Google.
+* Local AI (No cloud dependency)
+* Semantic search
+* Hybrid ranking
+* Event-driven architecture
+* PostgreSQL vector database
+* Asynchronous AI processing
+* Clean layered architecture
 
-It is not trying to replace ChatGPT.
+---
 
-It is not trying to replace Notion.
+# Running the Project
 
-It is building something different.
+## Requirements
 
-A trusted, intelligent, privacy-first memory operating system that grows alongside its user for years, understands what they have learned, remembers what they have done, retrieves knowledge instantly, and becomes a lifelong companion for thinking, learning, creating, and remembering.
+* Java 21
+* Maven
+* PostgreSQL
+* pgvector extension
+* Ollama
 
-#### **Memoria should not simply store information. It should preserve understanding.**
+### Install Ollama Models
+
+```bash
+ollama pull nomic-embed-text
+ollama pull llama3.2
+```
+
+### Start Ollama
+
+```bash
+ollama serve
+```
+
+### Start PostgreSQL
+
+Ensure the `pgvector` extension is installed.
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+### Run the Application
+
+```bash
+./mvnw spring-boot:run
+```
+
+---
+
+# Current Status
+
+## Completed
+
+* User Authentication
+* CRUD Operations
+* Tag Management
+* PostgreSQL Integration
+* Vector Embeddings
+* Hybrid Search
+* Local AI Summaries
+* Event-Driven Background Processing
+
+---
+
+# Planned Features
+
+* Document Uploads
+* OCR
+* PDF Parsing
+* RAG-based Question Answering
+* Knowledge Graphs
+* Shared Workspaces
+* Real-time Collaboration
+* REST API
+* Mobile Application
+* Cloud Deployment
+* Advanced AI Memory Retrieval
+
+---
+
+# Documentation
+
+Additional documentation is available in the `docs/` directory.
+
+* Project Overview
+* Architecture
+* Development Log
+* Changelog
+
+---
+
+# Project Philosophy
+
+Memoria is not intended to become another note-taking application.
+
+Its objective is to become an intelligent memory system that helps users capture, understand, organize, and retrieve knowledge with the assistance of modern AI.
+
+Every engineering decision—from asynchronous processing to local AI inference—has been made with scalability, privacy, and maintainability in mind.
+
+---
+
+# License
+
+This project is currently under active development.
+
+License information will be added before the first public release.
