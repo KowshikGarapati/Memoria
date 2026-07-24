@@ -510,3 +510,20 @@ We have encoutnered a weird situation in our final testing before we pulish the 
 Apparently there has been a slight technical incompatibility that ran the Ollama server in IPv6 instead of IPv4 sa we need it. It is caused because the act of shutting down the computer made the system reset for all the local machines and therefore, occured this error. 
 
 ## well, I will have a keen note of it and will not get stuck in a situstion of this kind
+
+## 24/07/2026 friday
+# -------------------------------------- PHASE 3 DEVELOPMENT ---------------------------------------
+
+In the phase three, I am going to focus on working on :
+    
+    1. Better Search
+    2. Pagination, Filters, Sorting
+    3. Markdown Note Experience
+    4. Testing
+    5. Documentation
+    6. AI Chat
+
+## PHASE 3.1 - Better Search Quality
+
+I am aiming to improve the search quality of Memoria by using Ranking.
+
