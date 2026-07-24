@@ -38,6 +38,100 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
     List<Note> searchByUserAndQuery(@Param("user") User user, @Param("query") String query);
 
     @Query(value = """
+            WITH note_documents AS (
+                SELECT 
+                    n.id,
+                    n.title,
+                    n.content,
+                    n.summary,
+                    n.created_at,
+                    n.updated_at,
+                    n.user_id,
+                    n.embedding,
+                    COALESCE(string_agg(t.name, ' '), '') AS combined_tags,
+                    COALESCE(string_agg(t.name, ','), '') AS tag_names,
+                    (
+                        setweight(to_tsvector('english', COALESCE(n.title, '')), 'A') ||
+                        setweight(to_tsvector('english', COALESCE(n.summary, '')), 'B') ||
+                        setweight(to_tsvector('english', COALESCE(string_agg(t.name, ' '), '')), 'C') ||
+                        setweight(to_tsvector('english', COALESCE(n.content, '')), 'D')
+                    ) AS full_document
+                FROM note n
+                LEFT JOIN note_tags nt ON n.id = nt.note_id
+                LEFT JOIN tag t ON nt.tag_id = t.id
+                WHERE n.user_id = :userId
+                  AND (:fromDate IS NULL OR n.created_at >= :fromDate)
+                  AND (:toDate IS NULL OR n.created_at <= :toDate)
+                GROUP BY n.id
+            ),
+            scored_notes AS (
+                SELECT 
+                    nd.id,
+                    nd.title,
+                    nd.content,
+                    nd.summary,
+                    nd.created_at AS createdAt,
+                    nd.updated_at AS updatedAt,
+                    nd.tag_names AS tagNames,
+                    ts_headline('english', 
+                                COALESCE(nd.title, '') || ' ' || COALESCE(nd.summary, '') || ' ' || COALESCE(nd.content, ''), 
+                                plainto_tsquery('english', COALESCE(:query, '')), 
+                                'StartSel=<b>, StopSel=</b>, MaxWords=35, MinWords=15') AS highlight,
+                    (
+                        COALESCE(ts_rank_cd(
+                            ARRAY[:contentWeight, :tagsWeight, :summaryWeight, :titleWeight]::float4[], 
+                            nd.full_document, 
+                            plainto_tsquery('english', COALESCE(:query, ''))
+                        ), 0) * :keywordBlend
+                        +
+                        CASE 
+                            WHEN :queryVector IS NOT NULL AND nd.embedding IS NOT NULL 
+                            THEN (1 - (nd.embedding <=> cast(:queryVector as vector))) * :vectorBlend
+                            ELSE 0
+                        END
+                    ) AS finalScore
+                FROM note_documents nd
+                WHERE (:query IS NULL OR :query = '' OR nd.full_document @@ plainto_tsquery('english', :query) OR :queryVector IS NOT NULL)
+                  AND (:tagNamesFilter IS NULL OR EXISTS (
+                          SELECT 1 FROM note_tags nt2 JOIN tag t2 ON nt2.tag_id = t2.id 
+                          WHERE nt2.note_id = nd.id AND t2.name IN (:tagNamesFilter)
+                      ))
+            )
+            SELECT sn.id AS id,
+                   sn.title AS title,
+                   sn.content AS content,
+                   sn.summary AS summary,
+                   sn.createdAt AS createdAt,
+                   sn.updatedAt AS updatedAt,
+                   sn.tagNames AS tagNames,
+                   sn.highlight AS highlight,
+                   sn.finalScore AS finalScore,
+                   COUNT(*) OVER() AS totalCount
+            FROM scored_notes sn
+            ORDER BY 
+                CASE WHEN :sortBy = 'NEWEST' THEN sn.createdAt END DESC,
+                CASE WHEN :sortBy = 'OLDEST' THEN sn.createdAt END ASC,
+                CASE WHEN :sortBy = 'RELEVANCE' OR :sortBy IS NULL THEN sn.finalScore END DESC,
+                sn.updatedAt DESC
+            """, nativeQuery = true)
+    List<com.memoria.Memoria.repositories.projections.SearchResultProjection> findWeightedHybridSearchResults(
+            @Param("userId") Long userId,
+            @Param("query") String query,
+            @Param("queryVector") float[] queryVector,
+            @Param("fromDate") java.time.LocalDateTime fromDate,
+            @Param("toDate") java.time.LocalDateTime toDate,
+            @Param("tagNamesFilter") java.util.Set<String> tagNamesFilter,
+            @Param("titleWeight") double titleWeight,
+            @Param("summaryWeight") double summaryWeight,
+            @Param("tagsWeight") double tagsWeight,
+            @Param("contentWeight") double contentWeight,
+            @Param("keywordBlend") double keywordBlend,
+            @Param("vectorBlend") double vectorBlend,
+            @Param("sortBy") String sortBy,
+            org.springframework.data.domain.Pageable pageable
+    );
+
+    @Query(value = """
             WITH semantic_search AS (
                 SELECT id, (1 - (embedding <=> cast(:queryVector as vector))) as semantic_score
                 FROM note
