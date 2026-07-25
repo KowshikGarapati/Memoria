@@ -102,6 +102,9 @@ public class NoteSearchServiceImpl implements SearchService {
                     .collect(Collectors.toSet());
         }
 
+        double rawScore = p.getFinalScore() != null ? p.getFinalScore() : 0.0;
+        double sanitizedScore = Double.isNaN(rawScore) ? 0.0 : rawScore;
+
         return SearchResultItem.builder()
                 .id(p.getId())
                 .title(p.getTitle())
@@ -110,7 +113,7 @@ public class NoteSearchServiceImpl implements SearchService {
                 .createdAt(p.getCreatedAt())
                 .updatedAt(p.getUpdatedAt())
                 .tags(tagSet)
-                .score(p.getFinalScore() != null ? p.getFinalScore() : 0.0)
+                .score(sanitizedScore)
                 .highlight(p.getHighlight())
                 .build();
     }

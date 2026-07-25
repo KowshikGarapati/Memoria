@@ -13,6 +13,9 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import com.memoria.Memoria.dto.search.SearchRequest;
+import com.memoria.Memoria.dto.search.SearchSort;
+import com.memoria.Memoria.services.SearchService;
 import java.security.Principal;
 
 @Controller
@@ -22,6 +25,7 @@ public class NoteController {
 
     private final NoteService noteService;
     private final UserService userService;
+    private final SearchService searchService;
 
     @GetMapping
     public String notesHome(Model model, Principal principal) {
@@ -39,7 +43,8 @@ public class NoteController {
         model.addAttribute("loggedUser", user);
         
         if (query != null && !query.isBlank()) {
-            model.addAttribute("searchResults", noteService.searchHybrid(user, query));
+            SearchRequest request = new SearchRequest(query, null, null, null, 0, 20, SearchSort.RELEVANCE);
+            model.addAttribute("searchResults", searchService.search(request, user).getContent());
         } else {
             model.addAttribute("notes", noteService.findAllByUser(user));
         }

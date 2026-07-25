@@ -91,7 +91,17 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
                         END
                     ) AS finalScore
                 FROM note_documents nd
-                WHERE (:query IS NULL OR :query = '' OR nd.full_document @@ plainto_tsquery('english', :query) OR :queryVector IS NOT NULL)
+                WHERE (
+                    (
+                        -- Browsing mode: no query text and no vector
+                        (:query IS NULL OR :query = '') AND :queryVector IS NULL
+                    ) OR (
+                        -- Search mode: text match OR positive vector similarity
+                        (:query IS NOT NULL AND :query <> '' AND nd.full_document @@ plainto_tsquery('english', :query))
+                        OR
+                        (:queryVector IS NOT NULL AND nd.embedding IS NOT NULL AND (1 - (nd.embedding <=> cast(:queryVector as vector))) > 0)
+                    )
+                )
                   AND (:tagNamesFilter IS NULL OR EXISTS (
                           SELECT 1 FROM note_tags nt2 JOIN tag t2 ON nt2.tag_id = t2.id 
                           WHERE nt2.note_id = nd.id AND t2.name IN (:tagNamesFilter)
@@ -133,9 +143,14 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
 
     @Query(value = """
             WITH semantic_search AS (
-                SELECT id, (1 - (embedding <=> cast(:queryVector as vector))) as semantic_score
+                SELECT id, 
+                       CASE 
+                           WHEN embedding IS NOT NULL AND :queryVector IS NOT NULL 
+                           THEN (1 - (embedding <=> cast(:queryVector as vector))) 
+                           ELSE 0 
+                       END as semantic_score
                 FROM note
-                WHERE user_id = :userId
+                WHERE user_id = :userId AND embedding IS NOT NULL
             ),
             keyword_search AS (
                 SELECT id, ts_rank_cd(to_tsvector('english', title || ' ' || content), plainto_tsquery('english', :query)) as keyword_score,
