@@ -523,7 +523,250 @@ In the phase three, I am going to focus on working on :
     5. Documentation
     6. AI Chat
 
-## PHASE 3.1 - Better Search Quality
+## PHASE 3.1 — Better Search Quality (Commit 1)
 
-I am aiming to improve the search quality of Memoria by using Ranking.
+The objective of this commit was not to immediately write SQL, but to first establish a clean architecture for the upcoming hybrid search engine.
 
+Rather than allowing the repository, controller, and service layers to exchange primitive values directly, I designed a dedicated search domain that separates the request, response, configuration, and persistence concerns.
+
+The first step was introducing strongly typed search models.
+
+Implemented:
+
+• SearchRequest
+    - Encapsulates every user-controlled search parameter.
+    - Query text
+    - Tag filters
+    - Date range filters
+    - Pagination
+    - Sort mode
+
+• SearchSort
+    - Introduced an enum instead of raw String values.
+    - Supported:
+        - RELEVANCE
+        - NEWEST
+        - OLDEST
+
+• SearchResultItem
+    - Future-proof DTO representing a ranked search result.
+    - Includes:
+        - id
+        - title
+        - content
+        - summary
+        - timestamps
+        - tags
+        - ranking score
+        - highlighted snippet
+
+To avoid unnecessary database queries, a type-safe projection interface (SearchResultProjection) was introduced.
+
+Instead of loading Note entities and then issuing additional queries for tags, PostgreSQL now aggregates tag names using string_agg(), allowing Spring Data JPA to map everything directly into projection interfaces.
+
+This design completely avoids the classic N+1 query problem during search.
+
+Search ranking weights were also externalized into SearchProperties using @ConfigurationProperties.
+
+Instead of hardcoding ranking constants inside SQL, every field weight can now be adjusted from application.properties.
+
+Current weights:
+
+• Title ............ 1.0
+• Summary ......... 0.8
+• Tags .............. 0.5
+• Content ......... 0.2
+
+Search blending coefficients were also externalized.
+
+Keyword Search : 40%
+
+Semantic Search : 60%
+
+This means future tuning requires configuration changes rather than code modifications.
+
+Finally, MemoriaApplication was updated to register SearchProperties using @EnableConfigurationProperties, keeping configuration clean without introducing unnecessary @Component annotations.
+
+Build Status
+
+✓ BUILD SUCCESS
+
+Outcome
+
+Commit 1 established the architectural foundation required for the hybrid search engine while maintaining strong separation of concerns between DTOs, projections, configuration, and persistence.
+
+## PHASE 3.1 — Better Search Quality (Commit 2)
+
+With the search architecture established, the second commit focused entirely on the database engine responsible for executing hybrid search.
+
+Rather than performing multiple repository calls and merging results inside Java, the goal was to let PostgreSQL perform the ranking in a single optimized query.
+
+The NoteRepository was redesigned around a native SQL query using Common Table Expressions (CTEs).
+
+The first stage constructs a weighted search document by combining:
+
+• Title
+• Summary
+• Tags
+• Content
+
+Each field receives a different importance using PostgreSQL's setweight() function.
+
+Weight Categories
+
+A → Title
+
+B → Summary
+
+C → Tags
+
+D → Content
+
+The resulting weighted document is ranked using ts_rank_cd(), producing a keyword relevance score.
+
+Semantic search is then incorporated using pgvector cosine similarity.
+
+The final ranking formula combines both scores.
+
+Final Score
+
+=
+
+Keyword Score × Keyword Blend
+
++
+
+Semantic Score × Vector Blend
+
+The ranking coefficients are supplied dynamically from SearchProperties rather than being embedded into SQL.
+
+Additional improvements include:
+
+• Native PostgreSQL highlighting using ts_headline()
+• Dynamic sorting
+    - Relevance
+    - Newest
+    - Oldest
+• Tag aggregation using string_agg()
+• Window function COUNT(*) OVER() for pagination metadata
+• Spring Data Pageable integration for automatic LIMIT and OFFSET generation
+
+Most importantly, every result is projected directly into SearchResultProjection, eliminating unnecessary entity loading and secondary database queries.
+
+Build Status
+
+✓ BUILD SUCCESS
+
+Outcome
+
+The database now performs weighted full-text search, semantic similarity ranking, pagination, sorting, highlighting, and total result counting in a single optimized query.
+
+## PHASE 3.1 — Better Search Quality (Commit 3)
+
+After completing the database engine, the next objective was to introduce a dedicated service layer capable of orchestrating every component involved in hybrid search.
+
+A new SearchService interface was introduced to provide a single entry point for all search operations.
+
+Its implementation, NoteSearchServiceImpl, became responsible for coordinating every stage of the search pipeline.
+
+Workflow
+
+Search Request
+
+↓
+
+Normalize Query
+
+↓
+
+Generate Embedding Vector
+
+↓
+
+Read Search Configuration
+
+↓
+
+Execute Repository Query
+
+↓
+
+Map Projection
+
+↓
+
+Return Paginated DTOs
+
+The service performs several important responsibilities.
+
+• Normalizes user queries.
+• Generates embedding vectors using EmbeddingService.
+• Falls back gracefully whenever embeddings cannot be generated.
+• Reads ranking weights from SearchProperties.
+• Executes the repository query.
+• Converts SearchResultProjection into SearchResultItem DTOs.
+• Returns results using Spring Data PageImpl.
+
+To simplify interaction with imperative Spring MVC code, EmbeddingService was extended with a synchronous wrapper (getEmbeddingSync()) while preserving its reactive implementation internally.
+
+This keeps reactive complexity isolated from the rest of the application.
+
+Another important architectural improvement was replacing the legacy search implementation inside NoteController.
+
+The Thymeleaf interface now communicates exclusively with SearchService, ensuring both the future REST API and the web interface share the exact same search pipeline.
+
+This eliminates duplicated search logic and establishes a single source of truth for search behaviour.
+
+Build Status
+
+✓ BUILD SUCCESS
+
+Outcome
+
+The search system now follows a layered architecture where controllers delegate to a dedicated SearchService, the service coordinates embeddings and ranking configuration, and the repository focuses solely on optimized data retrieval.
+
+## PHASE 3.1 — Better Search Quality (Commit 3.1)
+
+During end-to-end testing, an unexpected issue appeared.
+
+Regardless of the search query, a testing note named "Vector Test Note" continuously appeared in the results with a displayed relevance of NaN%.
+
+The behaviour clearly indicated that candidate filtering and score calculation were not behaving as intended.
+
+After tracing the execution path through PostgreSQL, pgvector, and the service layer, three independent issues were identified.
+
+Issue 1 — Overly Permissive SQL Filtering
+
+The repository query accepted every note whenever a query vector existed.
+
+This caused unrelated notes to bypass filtering despite having neither keyword matches nor semantic similarity.
+
+The WHERE clause was redesigned so that search results must satisfy at least one genuine matching condition.
+
+Issue 2 — NaN Score Propagation
+
+Invalid or missing vector values occasionally produced IEEE-754 NaN scores.
+
+These values propagated into the DTO layer and ultimately appeared in the user interface as "NaN% Match".
+
+Score sanitization was introduced before mapping projections into DTOs, ensuring invalid values safely fall back to zero.
+
+Issue 3 — Legacy Controller Pipeline
+
+The Thymeleaf controller was still invoking the legacy search implementation.
+
+The controller was updated to delegate all requests to SearchService, guaranteeing identical behaviour between the web interface and the future REST API.
+
+Verification
+
+• BUILD SUCCESS
+• Integration Tests Passed
+• Unrelated notes no longer appear in results.
+• Invalid NaN scores eliminated.
+• Search ranking behaves consistently.
+
+Outcome
+
+The hybrid search engine reached a stable production-ready state.
+
+Search results are now filtered correctly, relevance scores remain valid, and every user-facing search request passes through the same unified search pipeline.
