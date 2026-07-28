@@ -58,10 +58,10 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
                     ) AS full_document
                 FROM note n
                 LEFT JOIN note_tags nt ON n.id = nt.note_id
-                LEFT JOIN tag t ON nt.tag_id = t.id
+                LEFT JOIN tags t ON nt.tag_id = t.id
                 WHERE n.user_id = :userId
-                  AND (:fromDate IS NULL OR n.created_at >= :fromDate)
-                  AND (:toDate IS NULL OR n.created_at <= :toDate)
+                  AND (cast(:fromDate as timestamp) IS NULL OR n.created_at >= cast(:fromDate as timestamp))
+                  AND (cast(:toDate as timestamp) IS NULL OR n.created_at <= cast(:toDate as timestamp))
                 GROUP BY n.id
             ),
             scored_notes AS (
@@ -75,13 +75,13 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
                     nd.tag_names AS tagNames,
                     ts_headline('english', 
                                 COALESCE(nd.title, '') || ' ' || COALESCE(nd.summary, '') || ' ' || COALESCE(nd.content, ''), 
-                                plainto_tsquery('english', COALESCE(:query, '')), 
+                                plainto_tsquery('english', COALESCE(cast(:query as text), '')), 
                                 'StartSel=<b>, StopSel=</b>, MaxWords=35, MinWords=15') AS highlight,
                     (
                         COALESCE(ts_rank_cd(
                             ARRAY[:contentWeight, :tagsWeight, :summaryWeight, :titleWeight]::float4[], 
                             nd.full_document, 
-                            plainto_tsquery('english', COALESCE(:query, ''))
+                            plainto_tsquery('english', COALESCE(cast(:query as text), ''))
                         ), 0) * :keywordBlend
                         +
                         CASE 
@@ -94,16 +94,16 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
                 WHERE (
                     (
                         -- Browsing mode: no query text and no vector
-                        (:query IS NULL OR :query = '') AND :queryVector IS NULL
+                        (cast(:query as text) IS NULL OR cast(:query as text) = '') AND :queryVector IS NULL
                     ) OR (
                         -- Search mode: text match OR positive vector similarity
-                        (:query IS NOT NULL AND :query <> '' AND nd.full_document @@ plainto_tsquery('english', :query))
+                        (cast(:query as text) IS NOT NULL AND cast(:query as text) <> '' AND nd.full_document @@ plainto_tsquery('english', cast(:query as text)))
                         OR
                         (:queryVector IS NOT NULL AND nd.embedding IS NOT NULL AND (1 - (nd.embedding <=> cast(:queryVector as vector))) > 0)
                     )
                 )
-                  AND (:tagNamesFilter IS NULL OR EXISTS (
-                          SELECT 1 FROM note_tags nt2 JOIN tag t2 ON nt2.tag_id = t2.id 
+                  AND (cast(:tagNamesFilter as text[]) IS NULL OR EXISTS (
+                          SELECT 1 FROM note_tags nt2 JOIN tags t2 ON nt2.tag_id = t2.id 
                           WHERE nt2.note_id = nd.id AND t2.name IN (:tagNamesFilter)
                       ))
             )
@@ -119,9 +119,9 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
                    COUNT(*) OVER() AS totalCount
             FROM scored_notes sn
             ORDER BY 
-                CASE WHEN :sortBy = 'NEWEST' THEN sn.createdAt END DESC,
-                CASE WHEN :sortBy = 'OLDEST' THEN sn.createdAt END ASC,
-                CASE WHEN :sortBy = 'RELEVANCE' OR :sortBy IS NULL THEN sn.finalScore END DESC,
+                CASE WHEN cast(:sortBy as text) = 'NEWEST' THEN sn.createdAt END DESC,
+                CASE WHEN cast(:sortBy as text) = 'OLDEST' THEN sn.createdAt END ASC,
+                CASE WHEN cast(:sortBy as text) = 'RELEVANCE' OR cast(:sortBy as text) IS NULL THEN sn.finalScore END DESC,
                 sn.updatedAt DESC
             """, nativeQuery = true)
     List<com.memoria.Memoria.repositories.projections.SearchResultProjection> findWeightedHybridSearchResults(

@@ -12,8 +12,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.memoria.Memoria.dto.search.SearchRequest;
+import com.memoria.Memoria.dto.search.SearchResultItem;
+import com.memoria.Memoria.dto.search.SearchSort;
+import com.memoria.Memoria.services.SearchService;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -23,6 +32,7 @@ public class ApiNoteController {
 
     private final NoteService noteService;
     private final UserService userService;
+    private final SearchService searchService;
 
     @GetMapping
     public ResponseEntity<List<NoteResponse>> getAllNotes(Principal principal) {
@@ -69,15 +79,20 @@ public class ApiNoteController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<NoteResponse>> searchNotes(
-            @RequestParam String query,
+    public ResponseEntity<Page<SearchResultItem>> searchNotes(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) Set<String> tags,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "RELEVANCE") SearchSort sortBy,
             Principal principal
     ) {
         User user = userService.requireByUsername(principal.getName());
-        List<NoteResponse> notes = noteService.search(user, query).stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(notes);
+        SearchRequest request = new SearchRequest(query, tags, fromDate, toDate, page, size, sortBy);
+        Page<SearchResultItem> results = searchService.search(request, user);
+        return ResponseEntity.ok(results);
     }
 
     private NoteResponse toResponse(Note note) {
