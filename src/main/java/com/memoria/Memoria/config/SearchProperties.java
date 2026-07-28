@@ -5,13 +5,16 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Type-safe configuration properties for hybrid search ranking weights.
+ * Type-safe configuration properties for hybrid search ranking weights and relevance thresholds.
  * Bound to 'application.ai.search' in application.properties.
  */
 @ConfigurationProperties(prefix = "application.ai.search")
 @Getter
 @Setter
 public class SearchProperties {
+
+    /** Minimum vector similarity threshold required for vector candidate matching (Default: 0.50) */
+    private double minVectorSimilarity = 0.50;
 
     private Weights weights = new Weights();
 

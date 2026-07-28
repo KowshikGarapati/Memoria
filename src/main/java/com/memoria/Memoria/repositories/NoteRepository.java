@@ -96,10 +96,10 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
                         -- Browsing mode: no query text and no vector
                         (cast(:query as text) IS NULL OR cast(:query as text) = '') AND :queryVector IS NULL
                     ) OR (
-                        -- Search mode: text match OR positive vector similarity
-                        (cast(:query as text) IS NOT NULL AND cast(:query as text) <> '' AND nd.full_document @@ plainto_tsquery('english', cast(:query as text)))
+                        -- Search mode: text match OR semantic match above threshold
+                        (cast(:query as text) IS NOT NULL AND cast(:query as text) <> '' AND numnode(plainto_tsquery('english', cast(:query as text))) > 0 AND nd.full_document @@ plainto_tsquery('english', cast(:query as text)))
                         OR
-                        (:queryVector IS NOT NULL AND nd.embedding IS NOT NULL AND (1 - (nd.embedding <=> cast(:queryVector as vector))) > 0)
+                        (:queryVector IS NOT NULL AND nd.embedding IS NOT NULL AND (1 - (nd.embedding <=> cast(:queryVector as vector))) >= :minVectorSimilarity)
                     )
                 )
                   AND (cast(:tagNamesFilter as text[]) IS NULL OR EXISTS (
@@ -131,6 +131,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
             @Param("fromDate") java.time.LocalDateTime fromDate,
             @Param("toDate") java.time.LocalDateTime toDate,
             @Param("tagNamesFilter") java.util.Set<String> tagNamesFilter,
+            @Param("minVectorSimilarity") double minVectorSimilarity,
             @Param("titleWeight") double titleWeight,
             @Param("summaryWeight") double summaryWeight,
             @Param("tagsWeight") double tagsWeight,

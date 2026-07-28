@@ -770,3 +770,18 @@ Outcome
 The hybrid search engine reached a stable production-ready state.
 
 Search results are now filtered correctly, relevance scores remain valid, and every user-facing search request passes through the same unified search pipeline.
+
+## 28/07/2026 tuesday 
+
+ ### Commit 5: Search Ranking & Relevance Tuning                                                                                                                                                                   
+    - **Status**: Completed & Verified                                                                                                                                                                                
+    - **Scope**: Relevance Calibration & Threshold Fine-Tuning                                                                                                                                                        
+    - **Empirical Findings**:                                                                                                                                                                                         
+      - Measured 768-dimensional vector background noise floor: `0.33`–`0.38`.                                                                                                                                        
+      - Measured valid semantic/typo similarity range: `0.48`–`0.95`.                                                                                                                                                 
+      - Recommended & applied default threshold: `minVectorSimilarity = 0.50`.                                                                                                                                        
+    - **Key Changes**:                                                                                                                                                                                                
+      - Added `minVectorSimilarity` to `SearchProperties` and `application.properties`.                                                                                                                               
+      - Updated candidate SQL filter in `NoteRepository` to require `(1 - distance) >= :minVectorSimilarity`.                                                                                                         
+      - Added `numnode(...) > 0` to prevent PostgreSQL empty `tsquery` lexeme matches.                                                                                                                                
+    - **Verification**: `mvn clean test` -> 8/8 tests passed (`BUILD SUCCESS`).  

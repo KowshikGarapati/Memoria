@@ -67,6 +67,7 @@ public class NoteSearchServiceImpl implements SearchService {
                 request.getFromDate(),
                 request.getToDate(),
                 tagFilter,
+                searchProperties.getMinVectorSimilarity(),
                 weights.getTitle(),
                 weights.getSummary(),
                 weights.getTags(),
